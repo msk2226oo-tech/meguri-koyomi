@@ -267,11 +267,12 @@
   <section class="card">
     <h2>生まれた日を教えてください</h2>
     <div class="fields">
-      <div class="field"><label for="y">年</label><input type="number" id="y" value="1993" min="1900" max="2100" step="1"></div>
+      <div class="field"><label for="y">年</label><input type="number" id="y" placeholder="例：1993" inputmode="numeric" min="1900" max="2100" step="1"></div>
       <div class="field"><label for="m">月</label><select id="m"></select></div>
       <div class="field"><label for="d">日</label><select id="d"></select></div>
     </div>
     <button class="go" id="go" type="button">よみとく</button>
+    <p class="gate-err" id="go-err" role="alert"></p>
   </section>
 
   <div id="result" hidden>
@@ -365,11 +366,12 @@
     <h2>あの人の湯を選ぶ</h2>
     <p class="hint">誕生日だけ聞けば、その人に合う一品が決まります。贈り物にも。</p>
     <div class="fields">
-      <div class="field"><label for="ay">年</label><input type="number" id="ay" value="1990" min="1900" max="2100" step="1"></div>
+      <div class="field"><label for="ay">年</label><input type="number" id="ay" placeholder="例：1990" inputmode="numeric" min="1900" max="2100" step="1"></div>
       <div class="field"><label for="am">月</label><select id="am"></select></div>
       <div class="field"><label for="ad">日</label><select id="ad"></select></div>
     </div>
     <button class="go" id="ago" type="button">あの人をよみとく</button>
+    <p class="gate-err" id="ago-err" role="alert"></p>
     <div class="ano-res" id="ano"></div>
   </section>
 
@@ -825,14 +827,20 @@
   }
 
   var selM=el("m"),selD=el("d"),selH=el("h"),selG=el("g");
+  /* 生年月日は空欄から。本人に選んでもらう */
+  selM.add(new Option("—",""));selD.add(new Option("—",""));
   for(var i=1;i<=12;i++)selM.add(new Option(i+"月",i));
   for(var j=1;j<=31;j++)selD.add(new Option(j+"日",j));
   selH.add(new Option("わからない","x"));
   for(var k=0;k<24;k++)selH.add(new Option(("0"+k).slice(-2)+":00 ごろ",k));
-  selM.value="7";selD.value="14";selH.value="x";selG.value="";
+  selM.value="";selD.value="";selH.value="x";selG.value="";
+  function dateOk(yEl,mEl,dEl){
+    var y=parseInt(yEl.value,10);
+    return y>=1900&&y<=2100&&mEl.value!==""&&dEl.value!=="";
+  }
 
   function run(){
-    var y=parseInt(el("y").value,10);if(!(y>=1900&&y<=2100))y=1993;
+    var y=parseInt(el("y").value,10);
     var m=parseInt(selM.value,10),d=parseInt(selD.value,10);
     var hv=selH.value,hasTime=(hv!=="x"),h=hasTime?parseInt(hv,10):12;
     var dim=new Date(y,m,0).getDate();if(d>dim)d=dim;
@@ -840,11 +848,12 @@
   }
   /* あの人 */
   var aM=el("am"),aD=el("ad");
+  aM.add(new Option("—",""));aD.add(new Option("—",""));
   for(var i4=1;i4<=12;i4++)aM.add(new Option(i4+"月",i4));
   for(var j4=1;j4<=31;j4++)aD.add(new Option(j4+"日",j4));
-  aM.value="3";aD.value="8";
+  aM.value="";aD.value="";
   function runAno(){
-    var y=parseInt(el("ay").value,10);if(!(y>=1900&&y<=2100))y=1990;
+    var y=parseInt(el("ay").value,10);
     var m=parseInt(aM.value,10),d=parseInt(aD.value,10);
     var dim=new Date(y,m,0).getDate();if(d>dim)d=dim;
     var r=calc(y,m,d,12,false,"");
@@ -857,8 +866,11 @@
   }
   /* あの人：ボタンを押すまでは結果を出さない。一度出したら、入力を変えるたびに更新 */
   var anoShown=false;
-  el("ago").addEventListener("click",function(){anoShown=true;runAno();});
-  [el("ay"),aM,aD].forEach(function(n){n.addEventListener("change",function(){if(anoShown)runAno();});});
+  el("ago").addEventListener("click",function(){
+    if(!dateOk(el("ay"),aM,aD)){el("ago-err").textContent="あの人の生まれた年・月・日を入れてください。";return;}
+    el("ago-err").textContent="";anoShown=true;runAno();
+  });
+  [el("ay"),aM,aD].forEach(function(n){n.addEventListener("change",function(){if(anoShown&&dateOk(el("ay"),aM,aD))runAno();});});
 
   /* 完全版の鍵：メール登録でひらく
      FORM_ENDPOINT にメール配信サービス（またはGoogleフォーム）の送信先URLを入れる。
@@ -905,12 +917,14 @@
   /* 「よみとく」を押すまでは結果を隠しておく。一度出したら、入力を変えるたびに更新 */
   var resultShown=false;
   el("go").addEventListener("click",function(){
+    if(!dateOk(el("y"),selM,selD)){el("go-err").textContent="生まれた年・月・日を入れてください。";return;}
+    el("go-err").textContent="";
     run();
     var first=!resultShown;
     resultShown=true;el("result").hidden=false;
     if(first)el("share").scrollIntoView({behavior:"smooth",block:"start"});
   });
-  [el("y"),selM,selD,selH,selG].forEach(function(n){n.addEventListener("change",function(){if(resultShown)run();});});
+  [el("y"),selM,selD,selH,selG].forEach(function(n){n.addEventListener("change",function(){if(resultShown&&dateOk(el("y"),selM,selD))run();});});
 })();
 </script>
 
