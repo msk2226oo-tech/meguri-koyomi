@@ -274,6 +274,7 @@
     <button class="go" id="go" type="button">よみとく</button>
   </section>
 
+  <div id="result" hidden>
   <div class="share-wrap">
     <div class="share" id="share"></div>
     <p class="share-tip">このカードをスクリーンショットして、シェアしてみてください</p>
@@ -357,6 +358,7 @@
     <p class="hint" id="setsu-note" style="margin:16px 0 0"></p>
   </section>
 
+  </div>
   </div>
 
   <section class="card">
@@ -853,9 +855,10 @@
       +'<div class="rec-body"><span class="rank">あの人に合う一品</span><h3>'+p.name+'</h3><p>'+p.desc+'</p></div></div>'
       +'<p class="ano-note">ショップ公開後は、ここからのし・ギフト包装つきで贈れるようになります。</p>';
   }
-  el("ago").addEventListener("click",runAno);
-  [el("ay"),aM,aD].forEach(function(n){n.addEventListener("change",runAno);});
-  runAno();
+  /* あの人：ボタンを押すまでは結果を出さない。一度出したら、入力を変えるたびに更新 */
+  var anoShown=false;
+  el("ago").addEventListener("click",function(){anoShown=true;runAno();});
+  [el("ay"),aM,aD].forEach(function(n){n.addEventListener("change",function(){if(anoShown)runAno();});});
 
   /* 完全版の鍵：メール登録でひらく
      FORM_ENDPOINT にメール配信サービス（またはGoogleフォーム）の送信先URLを入れる。
@@ -881,7 +884,6 @@
     var g=el("gate");g.classList.add("done");
     g.innerHTML='<h2>完全版をひらきました</h2><p class="talk">登録ありがとうございます。節気ごとに、あなたの五行に合わせた湯の便りをお送りします。</p>';
   }
-  try{if(localStorage.getItem("mk_open")==="1")openFull();}catch(e){}
   el("unlock").addEventListener("click",function(){
     var m=el("mail").value.trim(),err=el("gate-err");
     if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(m)){err.textContent="メールアドレスをご確認ください。";return;}
@@ -897,10 +899,18 @@
     try{localStorage.setItem("mk_open","1");}catch(e){}
     openFull();
   });
+  /* 前に登録した人は完全版をひらいた状態で。ボタンに処理をつけたあとで呼ぶ（openFull がボタンごと差し替えるため） */
+  try{if(localStorage.getItem("mk_open")==="1")openFull();}catch(e){}
 
-  el("go").addEventListener("click",run);
-  [el("y"),selM,selD,selH,selG].forEach(function(n){n.addEventListener("change",run);});
-  run();
+  /* 「よみとく」を押すまでは結果を隠しておく。一度出したら、入力を変えるたびに更新 */
+  var resultShown=false;
+  el("go").addEventListener("click",function(){
+    run();
+    var first=!resultShown;
+    resultShown=true;el("result").hidden=false;
+    if(first)el("share").scrollIntoView({behavior:"smooth",block:"start"});
+  });
+  [el("y"),selM,selD,selH,selG].forEach(function(n){n.addEventListener("change",function(){if(resultShown)run();});});
 })();
 </script>
 
