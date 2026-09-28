@@ -251,6 +251,13 @@
   .corr b{font-weight:500;font-size:14px}
   .why-h{font-size:12px;letter-spacing:.12em;color:var(--ink-faint);margin:22px 0 8px;font-weight:500}
   .why-list{margin:0;padding-left:1.2em;color:var(--ink-soft);font-size:14px;line-height:1.85}
+  .aishou{margin:14px 0 0;padding:12px 14px;border-radius:12px;background:var(--sink)}
+  .aishou .lb{display:block;font-size:11.5px;color:var(--ink-faint);letter-spacing:.06em;margin-bottom:4px}
+  .aishou p{margin:0;font-size:14px;line-height:1.8}
+  .aishou-none{margin:14px 0 0;font-size:12.5px;color:var(--ink-faint)}
+  .line-send{display:inline-block;margin-top:14px;padding:9px 18px;border-radius:999px;background:#06C755;color:#fff;
+    font-size:13.5px;font-weight:500;text-decoration:none}
+  .mail-fix{margin-left:6px;padding:2px 10px;border-radius:999px;border:1px solid currentColor;background:none;color:inherit;font:inherit;cursor:pointer}
   .rec-why{font-size:12.5px;color:var(--ink-soft);margin:6px 0 0;line-height:1.75}
 </style>
 
@@ -294,15 +301,15 @@
   </section>
 
   <section class="card">
-    <h2>あなたに向く一品</h2>
+    <h2>あなたに合うもの</h2>
     <div class="recs" id="recs"></div>
   </section>
 
   <section class="card gate" id="gate">
     <h2>ここから先は、完全版</h2>
-    <p class="talk">なぜこの一品なのか。あなたに足りない五行と、その補いかた。これからの十二ヶ月と十年のめぐり。メールアドレスを入れると、すぐにこの下がひらきます。</p>
+    <p class="talk">なぜこれが合うのか。あなたに足りない五行と、その補いかた。これからの十二ヶ月と十年のめぐり。メールアドレスを入れると、すぐにこの下がひらきます。</p>
     <ul class="gate-list">
-      <li>この一品をすすめる理由と、あなたの五行の読みとき</li>
+      <li>これをすすめる理由と、あなたの五行の読みとき</li>
       <li>足りない五行があるとき、出やすい傾向と補いかた</li>
       <li>これからの十二ヶ月・十年のめぐり、通変星</li>
     </ul>
@@ -315,7 +322,7 @@
 
   <div class="full locked" id="full" inert>
     <section class="card">
-      <h2>なぜ、この一品なのか</h2>
+      <h2>なぜ、これが合うのか</h2>
       <div id="why"></div>
       <p class="why-h">今夜からできる、補いかた</p>
       <ul class="hints" id="hints"></ul>
@@ -360,11 +367,18 @@
   </section>
 
   </div>
+
+  <section class="card">
+    <h2>今日の一言を、LINE で</h2>
+    <p class="talk">あなたの日干 <b id="line-nk"></b> に合わせた「今日の一言」を、LINE で受け取れるようになります。準備ができたら、お知らせします。</p>
+    <!-- LINE 公式アカウントができたら、この span を <a class="go" href="LINEの友だち追加URL"> に差し替える -->
+    <span class="line-btn">LINE（準備中）</span>
+  </section>
   </div>
 
   <section class="card">
     <h2>あの人の湯を選ぶ</h2>
-    <p class="hint">誕生日だけ聞けば、その人に合う一品が決まります。贈り物にも。</p>
+    <p class="hint">誕生日だけ聞けば、その人が「何の人」か、何が合うかがわかります。あなたとの相性も。</p>
     <div class="fields">
       <div class="field"><label for="ay">年</label><input type="number" id="ay" placeholder="例：1990" inputmode="numeric" min="1900" max="2100" step="1"></div>
       <div class="field"><label for="am">月</label><select id="am"></select></div>
@@ -375,12 +389,6 @@
     <div class="ano-res" id="ano"></div>
   </section>
 
-  <section class="card">
-    <h2>今日の一言を、LINE で</h2>
-    <p class="talk">あなたの日干に合わせた「今日の一言」を、LINE でも受け取れるようになります。ひらいたら、メールでお知らせします。</p>
-    <!-- LINE 公式アカウントができたら、この span を <a class="go" href="LINEの友だち追加URL"> に差し替える -->
-    <span class="line-btn">LINE（準備中）</span>
-  </section>
 
   <footer>
     <p>節入りは太陽黄経から求めています。日柱は23時以降を翌日として扱います。</p>
@@ -569,11 +577,30 @@
       if(g===3&&kiAll.indexOf(2)<0){skippedKon=true;return;}
       var name=PRODUCT[PROD_OF[g]].name;
       if(seen[name])return;
-      seen[name]=1;out.push({g:g,p:PRODUCT[g]});
+      seen[name]=1;out.push({g:g,p:(SHOW_PRODUCTS?PRODUCT:PRE)[g]});
     });
     out.skippedKon=skippedKon;
     return out;
   }
+
+  /* 商品を見せるかどうか。前三ヶ月は商品を出さない（内容与视觉・铁律一）ので false。
+     众筹開始の二週間前に true にすると、商品名・香り・説明に切りかわる */
+  var SHOW_PRODUCTS=false;
+  var PRE=[
+    {name:"木の湯",desc:"伸びていく力を、夜の湯に迎える。木の五行の湯。"},
+    {name:"火の湯",desc:"あたためて、照らす力を、夜の湯に迎える。火の五行の湯。"},
+    {name:"土の茶",desc:"受けとめて、落ちつかせる力を、毎日の一杯で。土の五行のお茶。"},
+    {name:"土の茶",desc:"金を育てるのは土。まずは土の一杯から、土台をつくります。"},
+    {name:"水の湯",desc:"しずめて、ためる力を、一日の終わりの湯に。水の五行の湯。"}
+  ];
+  var PRE_WHY=[
+    "木の湯は、木の五行を夜の湯に迎えるための湯です。季節でいえば春、一日でいえば朝の五行。一日の終わりに、伸びていく力を少しだけ足します。",
+    "火の湯は、火の五行を夜の湯に迎えるための湯です。季節でいえば夏、一日でいえば昼の五行。冷えこむ夜に、あたたかな力を少しだけ足します。",
+    "土の茶は、土の五行を毎日に迎えるための一杯です。季節と季節のあいだ、土用の五行。一日のまんなかに、落ちつく時間をつくります。",
+    "金の湯は第二弾で届きます。それまでは、金を育てる土の五行から。土の茶で、まず土台をつくるのがおすすめです。",
+    "水の湯は、水の五行を一日の終わりに迎えるための湯です。季節でいえば冬、一日でいえば夜の五行。しずかに沈んでいく時間を、少しだけ長くします。"
+  ];
+  var PRE_NOTE="めぐり暦の湯は、いま準備中です。できあがったら、お知らせします。";
 
   /* 完全版：なぜこの一品か（五行説の対応と、性格の傾向。効能は書かない） */
   var CORR=[
@@ -680,7 +707,7 @@
       +'<p class="share-sub">'+KAN[r.dKan]+'（'+KAN_YOMI[r.dKan]+'）・すきな五行は <b>'+r.kiAll.map(function(g){return GO_NAME[g];}).join("・")+'</b></p>'
       +penta(r.pct)
       +'<p class="share-copy">'+KAN_CARD[r.dKan]+'</p>'
-      +'<p class="share-rec">今のあなたに合う一品　<b>'+r.recs[0].p.name+'</b></p>'
+      +'<p class="share-rec">今のあなたに合うのは　<b>'+r.recs[0].p.name+'</b></p>'
       +'<div class="share-foot">めぐり暦 · 五行でえらぶお風呂</div></div>';
 
     /* バー */
@@ -749,7 +776,7 @@
       mw.appendChild(c);
     });
     el("mo-note").innerHTML='これから一年のうち <em>'+good+'ヶ月</em> が、あなたの好きな五行がめぐる月。'
-      +'色のついていない月は、下でおすすめした一品を少し多めに。めぐりは十二ヶ月でひとまわりするので、'
+      +'色のついていない月は、上でおすすめしたものを少し多めに。めぐりは十二ヶ月でひとまわりするので、'
       +'苦手な月がずっと続くことはありません。月は、節入り（毎月5〜8日ごろ）から数えています。';
 
     /* 十年 */
@@ -790,9 +817,13 @@
       kn.textContent="金もあなたの好きな五行です。金の湯は第二弾で届きます。";
       recs.appendChild(kn);
     }
+    if(!SHOW_PRODUCTS){
+      var pn=document.createElement("p");pn.className="rec-why";pn.textContent=PRE_NOTE;recs.appendChild(pn);
+    }
+    el("line-nk").textContent=KAN[r.dKan]+"（"+KAN_YOMI[r.dKan]+"）";
     var g0=r.recs[0].g,cr=CORR[g0],wy=el("why");
     wy.style.setProperty("--c","var("+GO_VAR[g0]+")");
-    var ch="";for(var key in cr){ch+='<div><span>'+key+'</span><b>'+cr[key]+'</b></div>';}
+    var ch="";for(var key in cr){if(key==="香り"&&!SHOW_PRODUCTS)continue;ch+='<div><span>'+key+'</span><b>'+cr[key]+'</b></div>';}
     wy.innerHTML='<p class="why-lead">'+KAN_TYPE[r.dKan]+'のあなたに、いま足したいのは「'+GO_NAME[g0]+'」。</p>'
       +'<p class="talk">あなたの日干は'+KAN[r.dKan]+'、'+GO_NAME[r.self]+'の五行です。命式ぜんたいは'
       +(r.strong?'力が満ちている':'少し心もとない')+'状態で、'+GO_NAME[g0]+'はあなたにとって<em>「'+REL[mod(g0-r.self,5)][0]+'」</em>にあたります。'
@@ -803,8 +834,8 @@
       +'<p class="why-h">'+GO_NAME[g0]+'が少ないとき、出やすいといわれる傾向</p>'
       +'<ul class="why-list">'+LACK[g0].map(function(t){return '<li>'+t+'</li>';}).join("")+'</ul>'
       +'<p class="talk" style="margin-top:10px">当てはまるものがあっても、欠点ではありません。'+GO_NAME[g0]+'を少し足すだけで、めぐりかたが変わってきます。</p>'
-      +'<p class="why-h">この一品をすすめる理由</p>'
-      +'<p class="talk" style="margin:0">'+PROD_WHY[g0]+'</p>';
+      +'<p class="why-h">これをすすめる理由</p>'
+      +'<p class="talk" style="margin:0">'+(SHOW_PRODUCTS?PROD_WHY:PRE_WHY)[g0]+'</p>';
     var h=el("hints");h.innerHTML="";
     HINT[g0].forEach(function(t){
       var li=document.createElement("li");li.textContent=t;h.appendChild(li);
@@ -861,8 +892,28 @@
     el("ano").innerHTML='<p class="ano-type" style="color:var('+GO_VAR[r.self]+')">'+KAN_TYPE[r.dKan]+'</p>'
       +'<p class="talk">'+KAN_IMAGE[r.dKan]+'</p>'
       +'<div class="rec" style="margin-top:14px"><span class="rec-mark" style="background:var('+GO_VAR[g1]+')">'+GO_NAME[g1]+'</span>'
-      +'<div class="rec-body"><span class="rank">あの人に合う一品</span><h3>'+p.name+'</h3><p>'+p.desc+'</p></div></div>'
-      +'<p class="ano-note">ショップ公開後は、ここからのし・ギフト包装つきで贈れるようになります。</p>';
+      +'<div class="rec-body"><span class="rank">あの人に合うのは</span><h3>'+p.name+'</h3><p>'+p.desc+'</p></div></div>'
+      +aishou(lastR,r)
+      +'<a class="line-send" href="https://line.me/R/share?text='+encodeURIComponent(
+         "あなたは「"+KAN_TYPE[r.dKan]+"」らしいです。\n生まれた日で、五行と日干がわかる診断：\n"
+         +location.origin+location.pathname+"?utm_source=line&utm_content=ano")
+      +'" target="_blank" rel="noopener">この結果を LINE で送る</a>'
+      +'<p class="ano-note">'+(SHOW_PRODUCTS?"ショップ公開後は、ここからのし・ギフト包装つきで贈れるようになります。":"贈り物として届けられるようになったら、お知らせします。")+'</p>';
+  }
+  /* ふたりの相性：日干どうしの関係から一言。依拠は干合と五行の生剋（四柱推命内容库の相性表と同じ考え方）。
+     「相性が悪い」とは書かない */
+  function aishou(me,other){
+    if(!me)return '<p class="aishou-none">上で自分の生年月日も入れると、ふたりの相性が出ます。</p>';
+    var a=me.dKan,b=other.dKan,t;
+    if(Math.abs(a-b)===5)t="干合の組み合わせ。自然と引き合う、いちばん噛み合う二人です。";
+    else t=[
+      "同じ五行の二人。言わなくても通じる。そのぶん、ぶつかる場所も同じです。",
+      "あの人といると、あなたはのびのび出せる。言いたいことが言える相手です。",
+      "あなたが引っぱる関係。あの人の前では、しっかり者になれます。",
+      "あの人といると、少し背すじがのびる。その緊張感は、いい刺激でもあります。",
+      "あの人は、あなたを支えてくれる人。疲れたときに思い出す相手です。"
+    ][mod(KAN_GO[b]-KAN_GO[a],5)];
+    return '<div class="aishou"><span class="lb">あなた（'+KAN[a]+'）とあの人（'+KAN[b]+'）</span><p>'+t+'</p></div>';
   }
   /* あの人：ボタンを押すまでは結果を出さない。一度出したら、入力を変えるたびに更新 */
   var anoShown=false;
@@ -896,9 +947,31 @@
     var g=el("gate");g.classList.add("done");
     g.innerHTML='<h2>完全版をひらきました</h2><p class="talk">登録ありがとうございます。節気ごとに、あなたの五行に合わせた湯の便りをお送りします。</p>';
   }
+  /* よくある打ちまちがい（gmail.con など）を見つけたら、一度だけ確認する */
+  var MAIL_TYPO={"gmail.con":"gmail.com","gmail.co":"gmail.com","gmail.cm":"gmail.com","gmai.com":"gmail.com","gmial.com":"gmail.com",
+    "gamil.com":"gmail.com","gmali.com":"gmail.com","gmail.jp":"gmail.com","gmail.co.jp":"gmail.com",
+    "yahoo.co.j":"yahoo.co.jp","yahoo.cojp":"yahoo.co.jp","yahoo.co.jo":"yahoo.co.jp","yaho.co.jp":"yahoo.co.jp","yahooo.co.jp":"yahoo.co.jp","yahoo.jp":"yahoo.co.jp",
+    "icloud.con":"icloud.com","icloud.co":"icloud.com","iclod.com":"icloud.com","icoud.com":"icloud.com","icloud.jp":"icloud.com",
+    "docomo.ne.j":"docomo.ne.jp","docomo.co.jp":"docomo.ne.jp","ezweb.co.jp":"ezweb.ne.jp","softbank.co.jp":"softbank.ne.jp",
+    "hotmail.con":"hotmail.com","outlook.con":"outlook.com"};
+  var mailWarned="";
+  function mailFix(m){
+    var at=m.lastIndexOf("@");if(at<0)return null;
+    var dom=m.slice(at+1).toLowerCase(),fix=MAIL_TYPO[dom];
+    if(!fix&&/\.con$/.test(dom))fix=dom.replace(/\.con$/,".com");
+    return fix?m.slice(0,at+1)+fix:null;
+  }
   el("unlock").addEventListener("click",function(){
     var m=el("mail").value.trim(),err=el("gate-err");
     if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(m)){err.textContent="メールアドレスをご確認ください。";return;}
+    var sug=mailFix(m);
+    if(sug&&mailWarned!==m){
+      mailWarned=m;err.textContent="「"+sug+"」ではありませんか？";
+      var fb=document.createElement("button");fb.type="button";fb.className="mail-fix";fb.textContent="なおす";
+      fb.addEventListener("click",function(){el("mail").value=sug;err.textContent="";});
+      err.appendChild(fb);err.appendChild(document.createTextNode(" このままでよければ、もう一度押してください。"));
+      return;
+    }
     if(!el("agree").checked){err.textContent="お便りの受けとりに同意すると、ひらきます。";return;}
     err.textContent="";
     if(FORM_ENDPOINT){
@@ -920,6 +993,7 @@
     if(!dateOk(el("y"),selM,selD)){el("go-err").textContent="生まれた年・月・日を入れてください。";return;}
     el("go-err").textContent="";
     run();
+    if(anoShown&&dateOk(el("ay"),aM,aD))runAno();
     var first=!resultShown;
     resultShown=true;el("result").hidden=false;
     if(first)el("share").scrollIntoView({behavior:"smooth",block:"start"});
