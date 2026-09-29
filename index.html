@@ -141,6 +141,17 @@
     margin-top:22px;padding-top:16px;border-top:1px solid var(--rule);
     font-size:10.5px;letter-spacing:.24em;color:var(--ink-faint);
   }
+  .share-act{text-align:center;margin:12px 0 22px}
+  .save-btn{font:inherit;font-size:14px;padding:11px 26px;border-radius:999px;border:none;background:var(--ink);color:var(--paper);cursor:pointer;letter-spacing:.06em}
+  .tagline{font-size:12.5px;color:var(--ink-soft);margin:12px 0 0}
+  .tagline b{color:var(--ink);font-weight:600}
+  .copy-btn{font:inherit;font-size:11.5px;padding:2px 10px;margin-left:4px;border-radius:999px;border:1px solid var(--rule);background:transparent;color:var(--ink-soft);cursor:pointer}
+  .shot{position:fixed;inset:0;z-index:50;background:rgba(20,18,26,.94);display:none;flex-direction:column;align-items:center;justify-content:center;padding:18px;gap:12px}
+  .shot.on{display:flex}
+  .shot img{max-width:min(92vw,420px);max-height:74vh;border-radius:14px;box-shadow:0 10px 40px rgba(0,0,0,.35)}
+  .shot p{color:#fff;font-size:13px;margin:0;text-align:center}
+  .shot .row{display:flex;gap:10px}
+  .shot button,.shot a{font:inherit;font-size:13.5px;padding:9px 20px;border-radius:999px;border:1px solid rgba(255,255,255,.5);background:transparent;color:#fff;cursor:pointer;text-decoration:none}
   .share-tip{text-align:center;font-size:12px;color:var(--ink-faint);margin:10px 0 22px}
 
   /* bars */
@@ -285,7 +296,10 @@
   <div id="result" hidden>
   <div class="share-wrap">
     <div class="share" id="share"></div>
-    <p class="share-tip">このカードをスクリーンショットして、シェアしてみてください</p>
+    <div class="share-act">
+      <button class="save-btn" type="button" id="saveCard">画像を保存・シェア</button>
+      <p class="tagline">プロフィールに書くなら <b id="shortTag"></b> <button type="button" class="copy-btn" id="copyTag">コピー</button></p>
+    </div>
   </div>
 
   <section class="card">
@@ -389,6 +403,12 @@
     <div class="ano-res" id="ano"></div>
   </section>
 
+
+  <div class="shot" id="shot" role="dialog" aria-label="保存用の画像">
+    <img id="shotImg" alt="めぐり暦のカード">
+    <p>スマホは画像を長押しして保存。そのままストーリーやLINEに貼れます。</p>
+    <div class="row"><button type="button" id="shotShare" hidden>シェアする</button><a id="shotDl" download="meguri-koyomi.png">ダウンロード</a><button type="button" id="shotClose">閉じる</button></div>
+  </div>
 
   <footer>
     <p>節入りは太陽黄経から求めています。日柱は23時以降を翌日として扱います。</p>
@@ -821,6 +841,7 @@
       var pn=document.createElement("p");pn.className="rec-why";pn.textContent=PRE_NOTE;recs.appendChild(pn);
     }
     el("line-nk").textContent=KAN[r.dKan]+"（"+KAN_YOMI[r.dKan]+"）";
+    el("shortTag").textContent=KAN[r.dKan]+"・"+KAN_SHORT[r.dKan]+"の人";
     var g0=r.recs[0].g,cr=CORR[g0],wy=el("why");
     wy.style.setProperty("--c","var("+GO_VAR[g0]+")");
     var ch="";for(var key in cr){if(key==="香り"&&!SHOW_PRODUCTS)continue;ch+='<div><span>'+key+'</span><b>'+cr[key]+'</b></div>';}
@@ -883,28 +904,130 @@
   for(var i4=1;i4<=12;i4++)aM.add(new Option(i4+"月",i4));
   for(var j4=1;j4<=31;j4++)aD.add(new Option(j4+"日",j4));
   aM.value="";aD.value="";
+  var lastAno=null;
   function runAno(){
     var y=parseInt(el("ay").value,10);
     var m=parseInt(aM.value,10),d=parseInt(aD.value,10);
     var dim=new Date(y,m,0).getDate();if(d>dim)d=dim;
-    var r=calc(y,m,d,12,false,"");
+    var r=calc(y,m,d,12,false,"");lastAno=r;
     var p=r.recs[0].p,g1=r.recs[0].g;
     el("ano").innerHTML='<p class="ano-type" style="color:var('+GO_VAR[r.self]+')">'+KAN_TYPE[r.dKan]+'</p>'
       +'<p class="talk">'+KAN_IMAGE[r.dKan]+'</p>'
       +'<div class="rec" style="margin-top:14px"><span class="rec-mark" style="background:var('+GO_VAR[g1]+')">'+GO_NAME[g1]+'</span>'
       +'<div class="rec-body"><span class="rank">あの人に合うのは</span><h3>'+p.name+'</h3><p>'+p.desc+'</p></div></div>'
       +aishou(lastR,r)
+      +(lastR?'<button class="save-btn" type="button" id="savePair" style="margin-top:14px">ふたりのカードを保存</button><br>':'')
       +'<a class="line-send" href="https://line.me/R/share?text='+encodeURIComponent(
          "あなたは「"+KAN_TYPE[r.dKan]+"」らしいです。\n生まれた日で、五行と日干がわかる診断：\n"
          +location.origin+location.pathname+"?utm_source=line&utm_content=ano")
       +'" target="_blank" rel="noopener">この結果を LINE で送る</a>'
       +'<p class="ano-note">'+(SHOW_PRODUCTS?"ショップ公開後は、ここからのし・ギフト包装つきで贈れるようになります。":"贈り物として届けられるようになったら、お知らせします。")+'</p>';
   }
+  /* ===== 保存用カード（1080×1920、ストーリーの縦長）===== */
+  var KAN_SHORT=["大樹","草花","太陽","灯火","山","畑","鋼","宝石","大河","雨"];
+  var GO_HEX=["#7E9C82","#C08A82","#C0A473","#9B9AA6","#8298B4"];
+  var SITE="msk2226oo-tech.github.io/meguri-koyomi";
+  function wrapText(cx,text,x,y,maxW,lh){
+    var line="",lines=[];
+    for(var i=0;i<text.length;i++){var t=line+text[i];if(cx.measureText(t).width>maxW&&line){lines.push(line);line=text[i];}else line=t;}
+    if(line)lines.push(line);
+    /* 末尾が「す。」だけになる行を作らない */
+    var n=lines.length;
+    while(n>1&&lines[n-1].length<4&&lines[n-2].length>4){lines[n-1]=lines[n-2].slice(-1)+lines[n-1];lines[n-2]=lines[n-2].slice(0,-1);}
+    lines.forEach(function(l,k){cx.fillText(l,x,y+k*lh);});
+    return y+lines.length*lh;
+  }
+  function blob(cx,x,y,r,col,a){var g=cx.createRadialGradient(x,y,0,x,y,r);g.addColorStop(0,hexA(col,a));g.addColorStop(1,hexA(col,0));cx.fillStyle=g;cx.beginPath();cx.arc(x,y,r,0,6.283);cx.fill();}
+  function hexA(h,a){var n=parseInt(h.slice(1),16);return "rgba("+(n>>16)+","+(n>>8&255)+","+(n&255)+","+a+")";}
+  function baseCanvas(col){
+    var cv=document.createElement("canvas");cv.width=1080;cv.height=1920;var cx=cv.getContext("2d");
+    cx.fillStyle="#F5F3F6";cx.fillRect(0,0,1080,1920);
+    blob(cx,860,330,560,col,.30);blob(cx,160,1420,520,col,.18);blob(cx,960,1650,380,"#8B82A8",.12);
+    cx.textAlign="center";cx.fillStyle="#9C96A6";cx.font='500 30px "Zen Kaku Gothic New", sans-serif';
+    cx.fillText("M E G U R I   K O Y O M I",540,170);
+    return {cv:cv,cx:cx};
+  }
+  function footer(cx,msg){
+    cx.fillStyle="#6E6878";cx.font='500 38px "Zen Kaku Gothic New", sans-serif';cx.fillText(msg,540,1720);
+    cx.fillStyle="#9C96A6";cx.font='400 30px "Zen Kaku Gothic New", sans-serif';cx.fillText(SITE,540,1780);
+  }
+  function pill(cx,t,x,y,col){
+    cx.font='500 40px "Zen Kaku Gothic New", sans-serif';var w=cx.measureText(t).width+72;
+    cx.strokeStyle=col;cx.lineWidth=3;cx.beginPath();
+    if(cx.roundRect)cx.roundRect(x-w/2,y-46,w,72,36);else cx.rect(x-w/2,y-46,w,72);
+    cx.stroke();cx.fillStyle="#3B3742";cx.fillText(t,x,y+4);
+  }
+  function selfCard(r){
+    var col=GO_HEX[r.self],o=baseCanvas(col),cx=o.cx;
+    cx.fillStyle=hexA(col,.13);cx.font='600 560px "Klee One", serif';cx.fillText(KAN[r.dKan],540,720);
+    cx.fillStyle="#6E6878";cx.font='500 42px "Zen Kaku Gothic New", sans-serif';cx.fillText("わたしは",540,400);
+    cx.fillStyle=col;cx.font='600 168px "Klee One", serif';cx.fillText(KAN_TYPE[r.dKan],540,590);
+    pill(cx,KAN[r.dKan]+"（"+KAN_YOMI[r.dKan]+"）｜"+GO_NAME[r.self]+(r.dKan%2?"のマイナス":"のプラス"),540,690,col);
+    cx.fillStyle="#3B3742";cx.font='500 54px "Zen Kaku Gothic New", sans-serif';cx.fillText(KAN_CARD[r.dKan],540,850);
+    /* 五行のバー */
+    var mx=Math.max.apply(null,r.pct),y0=1000;
+    for(var g=0;g<5;g++){var y=y0+g*96;
+      cx.textAlign="left";cx.fillStyle=GO_HEX[g];cx.font='600 46px "Klee One", serif';cx.fillText(GO_NAME[g],200,y+16);
+      cx.fillStyle="#E6E1EA";cx.fillRect(290,y-14,560,28);
+      cx.fillStyle=GO_HEX[g];cx.fillRect(290,y-14,Math.max(8,560*r.pct[g]/mx),28);
+      cx.textAlign="right";cx.fillStyle="#6E6878";cx.font='500 34px "Zen Kaku Gothic New", sans-serif';cx.fillText(Math.round(r.pct[g]*100)+"%",900,y+12);}
+    cx.textAlign="center";cx.fillStyle="#3B3742";cx.font='500 42px "Zen Kaku Gothic New", sans-serif';
+    cx.fillText("すきな五行　"+r.kiAll.map(function(g){return GO_NAME[g];}).join("・"),540,1530);
+    cx.fillText("今のわたしに合うのは　"+r.recs[0].p.name,540,1600);
+    cx.fillStyle="#9C96A6";cx.font='400 30px "Zen Kaku Gothic New", sans-serif';cx.fillText("#サジュ　#五行診断　#めぐり暦",540,1650);
+    footer(cx,"生年月日だけで。あなたは何の人？");
+    return o.cv;
+  }
+  function pairCard(a,b){
+    var o=baseCanvas(GO_HEX[a.self]),cx=o.cx;
+    blob(cx,200,700,420,GO_HEX[b.self],.25);
+    cx.fillStyle="#6E6878";cx.font='500 42px "Zen Kaku Gothic New", sans-serif';cx.fillText("ふたりの相性",540,400);
+    cx.font='600 210px "Klee One", serif';
+    cx.fillStyle=GO_HEX[a.self];cx.fillText(KAN[a.dKan],330,700);
+    cx.fillStyle=GO_HEX[b.self];cx.fillText(KAN[b.dKan],750,700);
+    cx.fillStyle="#9C96A6";cx.font='400 60px "Klee One", serif';cx.fillText("×",540,660);
+    cx.fillStyle="#3B3742";cx.font='600 50px "Klee One", serif';
+    cx.fillText(KAN_TYPE[a.dKan],330,810);cx.fillText(KAN_TYPE[b.dKan],750,810);
+    cx.font='500 30px "Zen Kaku Gothic New", sans-serif';cx.fillStyle="#9C96A6";cx.fillText("わたし",330,870);cx.fillText("あの人",750,870);
+    var lab=Math.abs(a.dKan-b.dKan)===5?"引き合うふたり":["似たものどうし","のびのびできる","引っぱる関係","刺激しあう","支えてくれる人"][mod(KAN_GO[b.dKan]-KAN_GO[a.dKan],5)];
+    pill(cx,lab,540,1040,GO_HEX[a.self]);
+    cx.fillStyle="#3B3742";cx.font='500 50px "Zen Kaku Gothic New", sans-serif';
+    var yy=1200;aishouText(a.dKan,b.dKan).split("。").filter(Boolean).forEach(function(seg){yy=wrapText(cx,seg+"。",540,yy,860,80)+10;});
+    cx.fillStyle="#9C96A6";cx.font='400 30px "Zen Kaku Gothic New", sans-serif';cx.fillText("#サジュ　#相性診断　#めぐり暦",540,1640);
+    footer(cx,"誕生日だけで、ふたりの相性がわかる。");
+    return o.cv;
+  }
+  function showShot(cv,name){
+    var url=cv.toDataURL("image/png");$shot.img.src=url;$shot.dl.href=url;$shot.dl.download=name;
+    $shot.el.classList.add("on");
+    $shot.share.hidden=true;
+    if(navigator.canShare){cv.toBlob(function(bl){
+      var f=new File([bl],name,{type:"image/png"});
+      if(navigator.canShare({files:[f]})){$shot.share.hidden=false;$shot.share.onclick=function(){navigator.share({files:[f],title:"めぐり暦"}).catch(function(){});};}
+    });}
+  }
+  var $shot={el:el("shot"),img:el("shotImg"),dl:el("shotDl"),share:el("shotShare")};
+  el("shotClose").addEventListener("click",function(){$shot.el.classList.remove("on");});
+  $shot.el.addEventListener("click",function(e){if(e.target===$shot.el)$shot.el.classList.remove("on");});
+  function withFonts(fn){
+    var ready=document.fonts&&document.fonts.load?Promise.all([document.fonts.load('600 60px "Klee One"'),document.fonts.load('500 40px "Zen Kaku Gothic New"')]):Promise.resolve();
+    ready.then(fn,fn);
+  }
+  el("saveCard").addEventListener("click",function(){if(!lastR)return;withFonts(function(){showShot(selfCard(lastR),"meguri-koyomi.png");});});
+  el("copyTag").addEventListener("click",function(){
+    var t=el("shortTag").textContent+"｜めぐり暦";
+    if(navigator.clipboard)navigator.clipboard.writeText(t).then(function(){el("copyTag").textContent="コピーしました";setTimeout(function(){el("copyTag").textContent="コピー";},1600);});
+  });
+
   /* ふたりの相性：日干どうしの関係から一言。依拠は干合と五行の生剋（四柱推命内容库の相性表と同じ考え方）。
      「相性が悪い」とは書かない */
   function aishou(me,other){
     if(!me)return '<p class="aishou-none">上で自分の生年月日も入れると、ふたりの相性が出ます。</p>';
-    var a=me.dKan,b=other.dKan,t;
+    var a=me.dKan,b=other.dKan,t=aishouText(a,b);
+    return '<div class="aishou"><span class="lb">あなた（'+KAN[a]+'）とあの人（'+KAN[b]+'）</span><p>'+t+'</p></div>';
+  }
+  function aishouText(a,b){
+    var t;
     if(Math.abs(a-b)===5)t="干合の組み合わせ。自然と引き合う、いちばん噛み合う二人です。";
     else t=[
       "同じ五行の二人。言わなくても通じる。そのぶん、ぶつかる場所も同じです。",
@@ -913,8 +1036,11 @@
       "あの人といると、少し背すじがのびる。その緊張感は、いい刺激でもあります。",
       "あの人は、あなたを支えてくれる人。疲れたときに思い出す相手です。"
     ][mod(KAN_GO[b]-KAN_GO[a],5)];
-    return '<div class="aishou"><span class="lb">あなた（'+KAN[a]+'）とあの人（'+KAN[b]+'）</span><p>'+t+'</p></div>';
+    return t;
   }
+  el("ano").addEventListener("click",function(e){
+    if(e.target&&e.target.id==="savePair"&&lastR&&lastAno)withFonts(function(){showShot(pairCard(lastR,lastAno),"meguri-koyomi-aishou.png");});
+  });
   /* あの人：ボタンを押すまでは結果を出さない。一度出したら、入力を変えるたびに更新 */
   var anoShown=false;
   el("ago").addEventListener("click",function(){
